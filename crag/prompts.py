@@ -18,6 +18,45 @@ Document chunk:
 {document}
 \"\"\""""
 
+# ---------------------------------------------------------------------------
+# Grader prompt variants (compared in eval/prompt_experiment.py).
+# Pick the one the app uses with GRADER_VARIANT in .env.
+#
+#   zero_shot : instruction + label definitions only (GRADER_SYSTEM above)
+#   few_shot  : same, plus 3 worked examples. The examples are deliberately from
+#               an unrelated domain so they can't leak answers to the test set.
+#   cot       : same as zero-shot, but the model writes a short reasoning note
+#               before the label (chain-of-thought), via a "reasoning" field
+#               that comes BEFORE "grade" in the output schema.
+# ---------------------------------------------------------------------------
+
+GRADER_FEW_SHOT_EXAMPLES = """
+Examples:
+
+Question: What gas do plants absorb during photosynthesis?
+Chunk: "During photosynthesis, plants take in carbon dioxide from the air and release oxygen."
+grade: relevant   (the chunk states the answer directly)
+
+Question: In what year did the Eiffel Tower open to the public?
+Chunk: "The Eiffel Tower is a wrought-iron lattice tower in Paris, designed by Gustave Eiffel's company."
+grade: partial    (right subject, but the opening year is not given)
+
+Question: What is the boiling point of water at sea level?
+Chunk: "The Great Wall of China stretches across northern China for thousands of kilometres."
+grade: irrelevant (different subject entirely)
+"""
+
+GRADER_COT_SUFFIX = """
+Before grading, think briefly in the "reasoning" field (1-3 sentences):
+what exact fact does the question need, and does the chunk state that fact,
+only touch the topic, or not relate at all? Then give the grade."""
+
+GRADER_VARIANTS = {
+    "zero_shot": GRADER_SYSTEM,
+    "few_shot": GRADER_SYSTEM + "\n" + GRADER_FEW_SHOT_EXAMPLES,
+    "cot": GRADER_SYSTEM + "\n" + GRADER_COT_SUFFIX,
+}
+
 REWRITE_SYSTEM = """You rewrite user questions into a short, keyword-rich web search query.
 Keep names, numbers and technical terms. Remove filler words.
 Return only the query, nothing else."""

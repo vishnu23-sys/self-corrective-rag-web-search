@@ -21,9 +21,9 @@ import pandas as pd
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel
 
-from crag import config, prompts
+from crag import prompts
 from crag.graph import run_baseline, run_crag
-from crag.llm import get_llm
+from crag.llm import get_judge_llm
 
 HERE = Path(__file__).resolve().parent
 SYSTEMS = {"baseline": run_baseline, "crag": run_crag}
@@ -36,7 +36,7 @@ class JudgeOut(BaseModel):
 def judge(question: str, reference: str, answer: str) -> str:
     chain = ChatPromptTemplate.from_messages(
         [("system", prompts.JUDGE_SYSTEM), ("human", prompts.JUDGE_HUMAN)]
-    ) | get_llm(config.JUDGE_PROVIDER).with_structured_output(JudgeOut)
+    ) | get_judge_llm().with_structured_output(JudgeOut)
     return chain.invoke({"question": question, "reference": reference, "answer": answer}).verdict
 
 

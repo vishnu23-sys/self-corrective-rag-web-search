@@ -46,7 +46,17 @@ python -m crag.ingest --reset                 # chunk + embed everything in data
 python -m crag.graph "What is chain-of-thought prompting?"   # one question in the terminal
 streamlit run app.py                          # demo UI
 python -m eval.run_eval                       # baseline vs CRAG evaluation
+python -m eval.prompt_experiment              # compare grader prompts (zero-shot / few-shot / CoT)
 ```
+
+### Prompt-optimization experiment
+The relevance grader decides the route, so its prompt is the main thing we optimize. `crag/prompts.py`
+has three versions: **zero-shot** (instructions only), **few-shot** (plus 3 worked examples from an
+unrelated domain) and **chain-of-thought** (writes short reasoning before the label).
+`eval/prompt_experiment.py` grades the same retrieved chunks with each version and reports route
+accuracy, tokens and latency per question, plus a confusion matrix. It writes
+`docs/prompt_experiment_results.md`. If the run hits a rate limit, run it again and it resumes where it stopped. Pick the
+winning version with `GRADER_VARIANT` in `.env`.
 
 ## Project layout
 

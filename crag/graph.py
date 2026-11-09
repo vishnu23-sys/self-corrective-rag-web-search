@@ -15,7 +15,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 
-from crag import prompts
+from crag import config, prompts
 from crag.llm import get_llm
 from crag.retriever import retrieve
 from crag.websearch import web_search
@@ -25,6 +25,12 @@ Action = Literal["CORRECT", "AMBIGUOUS", "INCORRECT"]
 
 
 class GradeOut(BaseModel):
+    grade: Grade = Field(description="relevant, partial or irrelevant")
+
+
+class GradeWithReasoning(BaseModel):
+    # field order matters: the model writes its reasoning first, then the grade
+    reasoning: str = Field(description="1-3 sentences: what fact is needed and whether the chunk states it")
     grade: Grade = Field(description="relevant, partial or irrelevant")
 
 
@@ -62,9 +68,11 @@ def node_retrieve(state: CragState) -> CragState:
 
 
 def node_grade(state: CragState) -> CragState:
+    variant = config.GRADER_VARIANT
+    schema = GradeWithReasoning if variant == "cot" else GradeOut
     chain = ChatPromptTemplate.from_messages(
-        [("system", prompts.GRADER_SYSTEM), ("human", prompts.GRADER_HUMAN)]
-    ) | get_llm().with_structured_output(GradeOut)
+        [("system", prompts.GRADER_VARIANTS[variant]), ("human", prompts.GRADER_HUMAN)]
+    ) | get_llm().with_structured_output(schema)
 
     # grade all chunks in parallel (one LLM call each)
     outs = chain.batch([{"question": state["question"], "document": d["content"]} for d in state["documents"]])
