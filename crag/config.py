@@ -30,7 +30,7 @@ WEB_RESULTS = int(os.getenv("WEB_RESULTS", "3"))
 # --- Prompt variants -----------------------------------------------------
 # Which relevance-grader prompt to use: zero_shot | few_shot | cot | few_shot_cot | batch_few_shot
 # (compare them with: python -m eval.prompt_experiment)
-GRADER_VARIANT = os.getenv("GRADER_VARIANT", "zero_shot")
+GRADER_VARIANT = os.getenv("GRADER_VARIANT", "batch_few_shot")
 # Optional: a different (e.g. smaller, cheaper) model just for grading; empty = same as GROQ_MODEL
 GRADER_MODEL = os.getenv("GRADER_MODEL", "")
 # Optional: a different Groq model for the evaluation judge (own rate limit, less self-bias)
