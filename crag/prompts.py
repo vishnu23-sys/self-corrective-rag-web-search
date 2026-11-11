@@ -51,10 +51,32 @@ Before grading, think briefly in the "reasoning" field (1-3 sentences):
 what exact fact does the question need, and does the chunk state that fact,
 only touch the topic, or not relate at all? Then give the grade."""
 
+GRADER_BATCH_SYSTEM = """You are a strict relevance grader for a retrieval system.
+Given a user question and SEVERAL numbered document chunks, decide for EACH chunk how useful
+it is for answering the question. Grade every chunk independently.
+
+- "relevant":   the chunk directly contains the information needed to answer.
+- "partial":    the chunk is on the right topic but does not fully answer the question.
+- "irrelevant": the chunk does not help answer the question.
+
+Judge only by each chunk's content. Do not use outside knowledge.
+Return exactly one grade per chunk, in chunk order."""
+
+GRADER_BATCH_HUMAN = """Question: {question}
+
+{chunks}"""
+
+# Each variant: system prompt, whether the model writes reasoning first (CoT),
+# and whether all chunks are graded in ONE call (batch) or one call per chunk.
 GRADER_VARIANTS = {
-    "zero_shot": GRADER_SYSTEM,
-    "few_shot": GRADER_SYSTEM + "\n" + GRADER_FEW_SHOT_EXAMPLES,
-    "cot": GRADER_SYSTEM + "\n" + GRADER_COT_SUFFIX,
+    "zero_shot":      {"system": GRADER_SYSTEM, "reasoning": False, "batch": False},
+    "few_shot":       {"system": GRADER_SYSTEM + "\n" + GRADER_FEW_SHOT_EXAMPLES, "reasoning": False, "batch": False},
+    "cot":            {"system": GRADER_SYSTEM + "\n" + GRADER_COT_SUFFIX, "reasoning": True, "batch": False},
+    #   few_shot_cot   : examples AND reasoning -- is combining them worth the extra tokens?
+    "few_shot_cot":   {"system": GRADER_SYSTEM + "\n" + GRADER_FEW_SHOT_EXAMPLES + "\n" + GRADER_COT_SUFFIX,
+                       "reasoning": True, "batch": False},
+    #   batch_few_shot : all chunks in ONE call (instructions + examples are sent once, not 4x)
+    "batch_few_shot": {"system": GRADER_BATCH_SYSTEM + "\n" + GRADER_FEW_SHOT_EXAMPLES, "reasoning": False, "batch": True},
 }
 
 REWRITE_SYSTEM = """You rewrite user questions into a short, keyword-rich web search query.

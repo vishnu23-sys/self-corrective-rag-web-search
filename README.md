@@ -50,13 +50,32 @@ python -m eval.prompt_experiment              # compare grader prompts (zero-sho
 ```
 
 ### Prompt-optimization experiment
-The relevance grader decides the route, so its prompt is the main thing we optimize. `crag/prompts.py`
-has three versions: **zero-shot** (instructions only), **few-shot** (plus 3 worked examples from an
-unrelated domain) and **chain-of-thought** (writes short reasoning before the label).
-`eval/prompt_experiment.py` grades the same retrieved chunks with each version and reports route
-accuracy, tokens and latency per question, plus a confusion matrix. It writes
-`docs/prompt_experiment_results.md`. If the run hits a rate limit, run it again and it resumes where it stopped. Pick the
-winning version with `GRADER_VARIANT` in `.env`.
+The relevance grader decides the route, so its prompt is the main thing we optimize.
+`crag/prompts.py` has five versions:
+
+| Variant | Idea |
+|---|---|
+| `zero_shot` | Instructions only |
+| `few_shot` | Plus 3 worked examples from an unrelated domain (no answer leakage) |
+| `cot` | Writes 1-3 sentences of reasoning before the label |
+| `few_shot_cot` | Examples and reasoning |
+| `batch_few_shot` | Few-shot, but all chunks graded in **one** call instead of one per chunk (cost optimization) |
+
+Each can also run on a smaller model (`--grader-model openai/gpt-oss-20b`). `eval/prompt_experiment.py`
+grades the same retrieved chunks with every setup and reports route accuracy, tokens and LLM calls
+per question, the spread across repeated runs, confusion matrices and (if labelled) agreement with a human.
+It writes `docs/prompt_experiment_results.md`, and if it hits a rate limit, running it again resumes where it stopped.
+
+```bash
+python -m eval.prompt_experiment                                           # all variants, main model
+python -m eval.prompt_experiment --grader-model openai/gpt-oss-20b --variants zero_shot few_shot batch_few_shot
+python -m eval.prompt_experiment --repeats 3                               # measure run-to-run noise
+python -m eval.prompt_experiment --make-label-sheet                        # CSV for human chunk labels
+python -m eval.prompt_experiment --report-only                             # rebuild report after labelling
+```
+Human labels: run `--make-label-sheet`, open `eval/passage_labels.csv` in Excel, fill `human_label` with
+relevant / partial / irrelevant (20+ questions is enough), save, then `--report-only`.
+Pick the winner with `GRADER_VARIANT` (and optionally `GRADER_MODEL`) in `.env`.
 
 ## Project layout
 

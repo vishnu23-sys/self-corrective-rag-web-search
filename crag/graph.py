@@ -34,6 +34,15 @@ class GradeWithReasoning(BaseModel):
     grade: Grade = Field(description="relevant, partial or irrelevant")
 
 
+class ChunkGrade(BaseModel):
+    chunk: int = Field(description="chunk number, starting at 1")
+    grade: Grade = Field(description="relevant, partial or irrelevant")
+
+
+class BatchGrades(BaseModel):
+    grades: list[ChunkGrade] = Field(description="one entry per chunk, in chunk order")
+
+
 class CragState(TypedDict, total=False):
     question: str
     documents: list[dict]   # retrieved chunks, each gets a "grade" key
@@ -67,24 +76,46 @@ def node_retrieve(state: CragState) -> CragState:
     return {"documents": docs, "trace": [f"Retrieved {len(docs)} chunks from the vector store"]}
 
 
-def node_grade(state: CragState) -> CragState:
-    variant = config.GRADER_VARIANT
-    schema = GradeWithReasoning if variant == "cot" else GradeOut
+def grade_chunks(question: str, docs: list[dict], variant: str | None = None,
+                 model: str | None = None) -> list[str]:
+    """Grade each chunk relevant/partial/irrelevant using the chosen prompt variant and model."""
+    if not docs:
+        return []
+    spec = prompts.GRADER_VARIANTS[variant or config.GRADER_VARIANT]
+    llm = get_llm(model=model or config.GRADER_MODEL or None)
+
+    if spec["batch"]:
+        # one call for all chunks
+        chunks = "\n\n".join(f'Chunk {i}:\n"""\n{d["content"]}\n"""' for i, d in enumerate(docs, 1))
+        chain = ChatPromptTemplate.from_messages(
+            [("system", spec["system"]), ("human", prompts.GRADER_BATCH_HUMAN)]
+        ) | llm.with_structured_output(BatchGrades)
+        out = chain.invoke({"question": question, "chunks": chunks})
+        by_chunk = {g.chunk: g.grade for g in out.grades}
+        # a chunk the model skipped counts as irrelevant
+        return [by_chunk.get(i, "irrelevant") for i in range(1, len(docs) + 1)]
+
+    # one call per chunk, run in parallel
+    schema = GradeWithReasoning if spec["reasoning"] else GradeOut
     chain = ChatPromptTemplate.from_messages(
-        [("system", prompts.GRADER_VARIANTS[variant]), ("human", prompts.GRADER_HUMAN)]
-    ) | get_llm().with_structured_output(schema)
+        [("system", spec["system"]), ("human", prompts.GRADER_HUMAN)]
+    ) | llm.with_structured_output(schema)
+    outs = chain.batch([{"question": question, "document": d["content"]} for d in docs])
+    return [o.grade for o in outs]
 
-    # grade all chunks in parallel (one LLM call each)
-    outs = chain.batch([{"question": state["question"], "document": d["content"]} for d in state["documents"]])
-    graded = [{**d, "grade": o.grade} for d, o in zip(state["documents"], outs)]
 
-    grades = [d["grade"] for d in graded]
+def route_from_grades(grades: list[str]) -> Action:
     if "relevant" in grades:
-        action: Action = "CORRECT"
-    elif "partial" in grades:
-        action = "AMBIGUOUS"
-    else:
-        action = "INCORRECT"
+        return "CORRECT"
+    if "partial" in grades:
+        return "AMBIGUOUS"
+    return "INCORRECT"
+
+
+def node_grade(state: CragState) -> CragState:
+    grades = grade_chunks(state["question"], state["documents"])
+    graded = [{**d, "grade": g} for d, g in zip(state["documents"], grades)]
+    action = route_from_grades(grades)
 
     summary = ", ".join(f"{g}" for g in grades) or "no chunks"
     return {

@@ -32,6 +32,17 @@ Adding examples or reasoning helps the grader with the *partial* category, the h
 because "on topic but missing the fact" is a judgement call. It costs about 30% more tokens. Check
 whether the gap grows with real documents and more partial questions (aim for 10+).
 
+## Run 2 (pending): cheaper setups
+Added on 2026-11-11, but not run yet because Groq returned 403 "check your network settings" from the current network.
+- `few_shot_cot`: are examples and reasoning together better than either alone, and is it worth the tokens?
+- `batch_few_shot`: grade all chunks in ONE call. Expect far fewer tokens, since instructions and
+  examples are sent once instead of four times. Does accuracy hold?
+- Small model (`openai/gpt-oss-20b`) running `zero_shot`, `few_shot` and `batch_few_shot`: does a cheaper
+  model grade as well?
+- Human chunk labels (`--make-label-sheet`) to measure grading accuracy directly, not just routes.
+
+The finding to look for: *"setup X matches the best route accuracy at Y% of the tokens."*
+
 ## Next steps
 1. Rerun with the real knowledge base and the 40-60 question test set:
    `python -m eval.prompt_experiment --fresh`
