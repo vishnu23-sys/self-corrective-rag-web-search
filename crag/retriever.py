@@ -27,6 +27,7 @@ def retrieve(query: str, k: int | None = None) -> list[dict]:
     results = get_vectorstore().similarity_search_with_relevance_scores(query, k=k or config.TOP_K)
     return [
         {
+            "id": doc.id or "",  # chunk id from ingest: "<source>::<n>"
             "content": doc.page_content,
             "source": doc.metadata.get("source", "unknown"),
             "score": round(float(score), 3),
