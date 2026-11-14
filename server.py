@@ -10,12 +10,13 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from crag import config
-from crag.graph import stream_crag
+from crag.graph import run_baseline, stream_crag
 
 ROOT = Path(__file__).resolve().parent
 DIST = ROOT / "web" / "dist"
@@ -90,6 +91,21 @@ def _events(question: str):
 def ask(body: Ask):
     return StreamingResponse(_events(body.question.strip()), media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.post("/api/baseline")
+async def baseline(body: Ask):
+    """Plain RAG for the compare view: top-k passages straight into the LLM, no grading, no web."""
+    try:
+        res = await run_in_threadpool(run_baseline, body.question.strip())
+    except Exception as e:
+        return JSONResponse(status_code=502, content={"message": _friendly(e)})
+    return {
+        "answer": res.get("answer", ""),
+        "latency_s": res.get("latency_s"),
+        "sources": [{"source": str(c.get("source", "")), "id": c.get("id", ""), "kind": "report"}
+                    for c in res.get("context", [])],
+    }
 
 
 @app.get("/api/meta")

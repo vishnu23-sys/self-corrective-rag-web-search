@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowUp, Moon, Sun } from 'lucide-react'
 import Track from './components/Track'
 import Answer from './components/Answer'
 import Passages from './components/Passages'
+import Compare from './components/Compare'
 import { ROUTES, initialState, reducer, runPipeline } from './lib/pipeline'
 
 const FALLBACK_META = {
@@ -186,6 +187,8 @@ export default function App() {
           <Answer state={state} />
           <Passages state={state} />
         </div>
+
+        <Compare state={state} />
       </main>
     </div>
   )
