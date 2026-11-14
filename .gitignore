@@ -6,3 +6,4 @@ data/chroma/
 eval/results/
 .streamlit/secrets.toml
 .claude/
+web/node_modules/

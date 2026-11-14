@@ -269,6 +269,19 @@ def summarise(df: pd.DataFrame, full: bool):
                       "then `--report-only` to add chunk-label accuracy._"]
     REPORT.parent.mkdir(exist_ok=True)
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    # machine-readable summary for the app's Results tab
+    part = by_type["partial"] if "partial" in by_type.columns else pd.Series(dtype=float)
+    (REPORT.parent / "prompt_experiment_summary.json").write_text(json.dumps({
+        "generated": f"{datetime.now():%Y-%m-%d %H:%M}",
+        "questions": int(n_q),
+        "setups": [{
+            "setup": s, "variant": s.split(" @ ")[0], "model": s.split(" @ ")[1],
+            "runs": int(r.runs), "route_accuracy": round(float(r.route_accuracy), 4),
+            "partial_accuracy": None if pd.isna(part.get(s)) else round(float(part.get(s)), 4),
+            "avg_tokens": round(float(r.avg_tokens)), "llm_calls": int(r.llm_calls),
+        } for s, r in summary.iterrows()],
+    }, indent=2), encoding="utf-8")
     print(f"\nReport written to {REPORT}")
 
 

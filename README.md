@@ -44,7 +44,8 @@ Embeddings run locally (FastEmbed, `BAAI/bge-small-en-v1.5`), no key needed.
 ```bash
 python -m crag.ingest --reset                 # chunk + embed everything in data/docs/
 python -m crag.graph "What is chain-of-thought prompting?"   # one question in the terminal
-streamlit run app.py                          # demo UI
+python -m uvicorn server:app --port 8000      # demo UI -> open http://localhost:8000
+streamlit run app.py                          # backup demo UI (Streamlit)
 python -m eval.run_eval                       # baseline vs CRAG evaluation
 python -m eval.prompt_experiment              # compare grader prompts (zero-shot / few-shot / CoT)
 ```
@@ -77,6 +78,17 @@ Human labels: run `--make-label-sheet`, open `eval/passage_labels.csv` in Excel,
 relevant / partial / irrelevant (20+ questions is enough), save, then `--report-only`.
 Pick the winner with `GRADER_VARIANT` (and optionally `GRADER_MODEL`) in `.env`.
 
+## Demo UI (`web/`)
+A React + Tailwind + motion app with a live **route map**: the question travels down the line, the LLM rates
+each passage at the switch, and the chosen branch (report, report + web, or web only) lights up while the
+answer streams in. `server.py` (FastAPI) streams the pipeline events and serves the built app from `web/dist`,
+so **running it needs only Python**. Node is needed only to change the UI:
+
+```bash
+cd web && npm install && npm run dev      # live-reload dev server on :5173 (keep server.py running on :8000)
+cd web && npm run build                   # rebuild web/dist after changes, then commit it
+```
+
 ## Project layout
 
 | Path | What it is | Owner |
@@ -87,7 +99,8 @@ Pick the winner with `GRADER_VARIANT` (and optionally `GRADER_MODEL`) in `.env`.
 | `crag/ingest.py`, `crag/retriever.py` | Loading, chunking, ChromaDB | Member 2 |
 | `data/docs/` | Knowledge base (sample files are placeholders, replace them) | Member 2 |
 | `eval/questions.json`, `eval/run_eval.py` | Test set + evaluation | Member 2 |
-| `app.py` | Streamlit demo | Member 3 |
+| `server.py`, `web/` | Demo UI: FastAPI streaming server + React route-map app | Member 1 |
+| `app.py` | Backup Streamlit demo with results charts | Member 3 |
 | `docs/` | Diagrams, literature survey, report, slides | Member 3 |
 
 ## Team task split

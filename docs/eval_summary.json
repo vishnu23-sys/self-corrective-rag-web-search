@@ -1,0 +1,11 @@
+{
+  "_source": "docs/eval_results.md (baseline: run of 2026-11-12, 0 errors; CRAG: clean rerun of 2026-11-13, 0 errors). Update both together.",
+  "dataset": "US Dept. of Education, AI and the Future of Teaching and Learning (2023), 71 pages",
+  "questions": {"in_kb": 24, "partial": 12, "out_of_kb": 12},
+  "systems": {
+    "baseline": {"label": "Plain RAG", "accuracy": 0.354, "hallucination_rate": 0.083, "abstain_rate": 0.562,
+                 "avg_latency_s": 6.802, "by_type": {"in_kb": 0.708, "partial": 0.0, "out_of_kb": 0.0}},
+    "crag":     {"label": "CRAG", "accuracy": 0.938, "hallucination_rate": 0.021, "abstain_rate": 0.042,
+                 "avg_latency_s": 15.844, "by_type": {"in_kb": 0.875, "partial": 1.0, "out_of_kb": 1.0}}
+  }
+}

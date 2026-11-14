@@ -1,6 +1,6 @@
 # Prompt-optimization experiment: relevance grader
 
-_Generated 2026-11-11 09:14 by `python -m eval.prompt_experiment`. 21 questions; every setup grades the same retrieved chunks._
+_Generated 2026-11-14 19:18 by `python -m eval.prompt_experiment`. 48 questions; every setup grades the same retrieved chunks._
 
 A **setup** is a grader prompt variant plus the model that runs it. The grader labels each retrieved chunk *relevant / partial / irrelevant*, and those labels pick the route. A route counts as correct when it matches the question type: answerable from the notes → CORRECT, partly covered → AMBIGUOUS, not in the notes → INCORRECT.
 
@@ -8,102 +8,54 @@ A **setup** is a grader prompt variant plus the model that runs it. The grader l
 
 | Setup | Runs | Route accuracy | Spread across runs | Tokens / question | vs zero-shot | LLM calls / question |
 |---|---|---|---|---|---|---|
-| zero_shot @ gpt-oss-20b | 1 | 95% | - | 1753 | 1.00x | 4 |
-| few_shot @ gpt-oss-20b | 1 | 90% | - | 2309 | 1.31x | 4 |
-| batch_few_shot @ gpt-oss-20b | 1 | 95% | - | 1104 | 0.63x | 1 |
-| zero_shot @ gpt-oss-120b | 1 | 95% | - | 1758 | 1.00x | 4 |
-| few_shot @ gpt-oss-120b | 1 | 100% | - | 2328 | 1.32x | 4 |
-| cot @ gpt-oss-120b | 1 | 100% | - | 2261 | 1.29x | 4 |
-| few_shot_cot @ gpt-oss-120b | 1 | 100% | - | 2818 | 1.60x | 4 |
-| batch_few_shot @ gpt-oss-120b | 1 | 100% | - | 1136 | 0.65x | 1 |
+| zero_shot @ gpt-oss-120b | 1 | 83% | - | 1992 | 1.00x | 4 |
+| batch_few_shot @ gpt-oss-120b | 1 | 81% | - | 1301 | 0.65x | 1 |
 
 ## Route accuracy by question type
 
 | Setup | in_kb | partial | out_of_kb |
 |---|---|---|---|
-| zero_shot @ gpt-oss-20b | 100% | 80% | 100% |
-| few_shot @ gpt-oss-20b | 100% | 60% | 100% |
-| batch_few_shot @ gpt-oss-20b | 100% | 80% | 100% |
-| zero_shot @ gpt-oss-120b | 100% | 80% | 100% |
-| few_shot @ gpt-oss-120b | 100% | 100% | 100% |
-| cot @ gpt-oss-120b | 100% | 100% | 100% |
-| few_shot_cot @ gpt-oss-120b | 100% | 100% | 100% |
-| batch_few_shot @ gpt-oss-120b | 100% | 100% | 100% |
+| zero_shot @ gpt-oss-120b | 79% | 75% | 100% |
+| batch_few_shot @ gpt-oss-120b | 71% | 83% | 100% |
 
 ## Confusion matrices (rows = expected route, columns = chosen route; all runs)
-
-**zero_shot @ gpt-oss-20b**
-
-| expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
-|---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 4 | 1 |
-| INCORRECT | 0 | 0 | 6 |
-
-**few_shot @ gpt-oss-20b**
-
-| expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
-|---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 3 | 2 |
-| INCORRECT | 0 | 0 | 6 |
-
-**batch_few_shot @ gpt-oss-20b**
-
-| expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
-|---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 4 | 1 |
-| INCORRECT | 0 | 0 | 6 |
 
 **zero_shot @ gpt-oss-120b**
 
 | expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
 |---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 4 | 1 |
-| INCORRECT | 0 | 0 | 6 |
-
-**few_shot @ gpt-oss-120b**
-
-| expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
-|---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 5 | 0 |
-| INCORRECT | 0 | 0 | 6 |
-
-**cot @ gpt-oss-120b**
-
-| expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
-|---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 5 | 0 |
-| INCORRECT | 0 | 0 | 6 |
-
-**few_shot_cot @ gpt-oss-120b**
-
-| expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
-|---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 5 | 0 |
-| INCORRECT | 0 | 0 | 6 |
+| CORRECT | 19 | 4 | 1 |
+| AMBIGUOUS | 0 | 9 | 3 |
+| INCORRECT | 0 | 0 | 12 |
 
 **batch_few_shot @ gpt-oss-120b**
 
 | expected \ chosen | CORRECT | AMBIGUOUS | INCORRECT |
 |---|---|---|---|
-| CORRECT | 10 | 0 | 0 |
-| AMBIGUOUS | 0 | 5 | 0 |
-| INCORRECT | 0 | 0 | 6 |
+| CORRECT | 17 | 5 | 2 |
+| AMBIGUOUS | 0 | 10 | 2 |
+| INCORRECT | 0 | 0 | 12 |
 
 ## Misrouted questions
 
 | Setup | Run | Question | Expected | Chosen | Chunk grades |
 |---|---|---|---|---|---|
-| batch_few_shot @ gpt-oss-20b | 1 | Which company originally developed the FAISS library? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
-| few_shot @ gpt-oss-20b | 1 | Which company originally developed the FAISS library? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
-| few_shot @ gpt-oss-20b | 1 | Who proposed the ReAct prompting framework and in what year? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
-| zero_shot @ gpt-oss-120b | 1 | Which company originally developed the FAISS library? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
-| zero_shot @ gpt-oss-20b | 1 | Who proposed the ReAct prompting framework and in what year? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | According to the McKinsey report cited, how much could AI reduce teachers' weekly preparation time? | CORRECT | AMBIGUOUS | partial, partial, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | What are some ways automated essay scoring systems can be misled? | CORRECT | AMBIGUOUS | partial, irrelevant, partial, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | What metaphor does the report use to describe the kind of AI it wants in education? | CORRECT | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | How many policy recommendations does the report make, and what is the first one? | CORRECT | AMBIGUOUS | partial, partial, partial, partial |
+| batch_few_shot @ gpt-oss-120b | 1 | What are the six desirable characteristics of AI models for education listed in the report? | CORRECT | AMBIGUOUS | partial, partial, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | What does the Children's Internet Protection Act (CIPA) require schools and libraries to do? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | What is the Response to Intervention (RTI) framework in schools? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | What are the four foundations the report uses to frame policies for AI in education? | CORRECT | AMBIGUOUS | partial, irrelevant, irrelevant, irrelevant |
+| batch_few_shot @ gpt-oss-120b | 1 | How many tiers of evidence does the Elementary and Secondary Education Act (ESEA) define for evaluating educational technology? | CORRECT | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | According to the McKinsey report cited, how much could AI reduce teachers' weekly preparation time? | CORRECT | AMBIGUOUS | partial, partial, irrelevant, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | What are some ways automated essay scoring systems can be misled? | CORRECT | AMBIGUOUS | partial, irrelevant, partial, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | What metaphor does the report use to describe the kind of AI it wants in education? | CORRECT | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | How many policy recommendations does the report make, and what is the first one? | CORRECT | AMBIGUOUS | partial, partial, partial, partial |
+| zero_shot @ gpt-oss-120b | 1 | What are the six desirable characteristics of AI models for education listed in the report? | CORRECT | AMBIGUOUS | partial, partial, irrelevant, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | Which company released ChatGPT, and when was it first released to the public? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | Who directed the film '2001: A Space Odyssey'? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
+| zero_shot @ gpt-oss-120b | 1 | What is the Response to Intervention (RTI) framework in schools? | AMBIGUOUS | INCORRECT | irrelevant, irrelevant, irrelevant, irrelevant |
 
 _No human chunk labels yet: run `--make-label-sheet`, fill in `eval/passage_labels.csv`, then `--report-only` to add chunk-label accuracy._

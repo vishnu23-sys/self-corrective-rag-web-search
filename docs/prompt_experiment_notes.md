@@ -67,6 +67,37 @@ accuracy as the best setup, cheaper, and faster in the demo (1 call instead of 4
 **Caveats:** one run each on 21 easy questions with only 5 partly covered. The differences are 1-2
 questions, so treat these as hypotheses to confirm on the real dataset with `--repeats 3`.
 
+## Run 3: real dataset, 48 questions (2026-11-14)
+Knowledge base: the 71-page US Department of Education report. Test set: 24 in the report, 12 partly covered,
+12 not covered. Model gpt-oss-120b. Only two setups this time, because Groq's daily token limit allows that many.
+
+| Setup | Route accuracy | In the report | Partly covered | Not covered | Tokens / question | LLM calls |
+|---|---|---|---|---|---|---|
+| zero-shot | 83% | 79% | 75% | 100% | 1,992 | 4 |
+| batch few-shot | 81% | 71% | **83%** | 100% | **1,301 (0.65x)** | **1** |
+
+**Findings**
+1. **The cost saving holds on real data.** Batch rating used 35% fewer tokens and 1 call instead of 4,
+   the same ratio as on the sample data.
+2. **Accuracy is about the same overall**: 81% vs 83% is one question out of 48. The sample-data result
+   (batch 100% vs zero-shot 95%) did **not** replicate as a clear win. With real data it's a tie.
+3. **It's a trade-off, not a free lunch.** Batch rating is better on partly covered questions (83% vs 75%)
+   but more often calls an answerable question "partly covered" (71% vs 79% on in-report questions).
+   Seeing all 4 passages side by side seems to make it more cautious about calling any single one fully useful.
+4. **Those cautious misroutes mostly don't hurt the final answer.** An in-report question sent to
+   "report + web" still keeps the partly useful report passages and adds web results, so it's usually still
+   answered correctly. CRAG's end-to-end accuracy on in-report questions is 87.5% (see eval_results.md),
+   higher than the 71-79% route accuracy.
+5. **Not-covered questions are perfectly detected by both** (100%), which is what eliminates
+   hallucinations on questions outside the report.
+
+**Conclusion for the report:** batch few-shot rating gives the same overall routing accuracy for 65% of the
+tokens and a quarter of the API calls, so we keep it as the default. The honest framing is
+"cheaper at equal accuracy", not "more accurate".
+
+**Not yet run on real data:** few-shot, CoT, few-shot + CoT and the small model (daily token limit).
+Run them with another teammate's key: `python -m eval.prompt_experiment --variants few_shot cot`
+
 ## Next steps
 1. Rerun with the real knowledge base and the 40-60 question test set:
    `python -m eval.prompt_experiment --fresh`

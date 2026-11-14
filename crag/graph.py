@@ -182,14 +182,40 @@ def build_graph():
 _GRAPH = None
 
 
-def run_crag(question: str) -> dict:
+def _graph():
     global _GRAPH
     if _GRAPH is None:
         _GRAPH = build_graph()
+    return _GRAPH
+
+
+def run_crag(question: str) -> dict:
     t0 = time.perf_counter()
-    out = _GRAPH.invoke({"question": question, "trace": []})
+    out = _graph().invoke({"question": question, "trace": []})
     out["latency_s"] = round(time.perf_counter() - t0, 2)
     return out
+
+
+def stream_crag(question: str):
+    """Run CRAG and yield events as they happen (used by the UI to animate the pipeline):
+
+        ("step", node_name, state_so_far)   after each node finishes
+        ("token", text)                     each piece of the answer as the LLM writes it
+        ("done", final_state)               at the end (includes latency_s)
+    """
+    t0 = time.perf_counter()
+    state: dict = {"question": question, "trace": []}
+    for mode, chunk in _graph().stream(state, stream_mode=["updates", "messages"]):
+        if mode == "updates":
+            for node, update in chunk.items():
+                state.update(update or {})
+                yield ("step", node, dict(state))
+        else:  # "messages": LLM token chunks; only forward the answer writer's tokens
+            msg, meta = chunk
+            if meta.get("langgraph_node") == "generate" and getattr(msg, "content", ""):
+                yield ("token", msg.content)
+    state["latency_s"] = round(time.perf_counter() - t0, 2)
+    yield ("done", state)
 
 
 def run_baseline(question: str) -> dict:

@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. Colors are "r g b" so Tailwind can add alpha: bg-report/10 */
+:root,
+[data-theme='light'] {
+  --canvas: 242 244 247;
+  --panel: 255 255 255;
+  --sunken: 234 237 242;
+  --line: 216 221 229;
+  --line-strong: 184 191 203;
+  --fg: 21 26 38;
+  --muted: 88 97 117;
+  --faint: 138 147 165;
+  --report: 15 128 122;
+  --both: 182 114 14;
+  --web: 84 72 196;
+  --danger: 190 48 48;
+  --shadow: 0 1px 2px rgb(21 26 38 / 0.04), 0 8px 24px -12px rgb(21 26 38 / 0.12);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --canvas: 14 18 26;
+  --panel: 22 27 38;
+  --sunken: 30 36 50;
+  --line: 44 52 69;
+  --line-strong: 66 76 97;
+  --fg: 234 237 243;
+  --muted: 160 168 184;
+  --faint: 112 121 140;
+  --report: 63 193 188;
+  --both: 232 168 64;
+  --web: 150 140 255;
+  --danger: 240 110 110;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-canvas font-sans text-fg;
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  ::selection {
+    background: rgb(var(--report) / 0.25);
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--fg));
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-panel border border-line bg-panel;
+    box-shadow: var(--shadow);
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, rgb(var(--sunken)) 25%, rgb(var(--line) / 0.7) 50%, rgb(var(--sunken)) 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded-md;
+  }
+  .clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

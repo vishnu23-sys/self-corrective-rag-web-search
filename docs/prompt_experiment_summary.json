@@ -1,0 +1,26 @@
+{
+  "generated": "2026-11-14 19:18",
+  "questions": 48,
+  "setups": [
+    {
+      "setup": "zero_shot @ gpt-oss-120b",
+      "variant": "zero_shot",
+      "model": "gpt-oss-120b",
+      "runs": 1,
+      "route_accuracy": 0.8333,
+      "partial_accuracy": 0.75,
+      "avg_tokens": 1992,
+      "llm_calls": 4
+    },
+    {
+      "setup": "batch_few_shot @ gpt-oss-120b",
+      "variant": "batch_few_shot",
+      "model": "gpt-oss-120b",
+      "runs": 1,
+      "route_accuracy": 0.8125,
+      "partial_accuracy": 0.8333,
+      "avg_tokens": 1301,
+      "llm_calls": 1
+    }
+  ]
+}
